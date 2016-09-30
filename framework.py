@@ -1,5 +1,3 @@
-__author__ = 'sergey.kondrashov'
-
 from telnetlib import Telnet
 from time import sleep
 
@@ -52,6 +50,8 @@ class TelnetPrototype():
             return self._connect_to_juniper()
         elif self.device_type == 'tellabs':
             return self._connect_to_tellabs()
+        else:
+            return None
 
     def _get_result_of_command(self):
         pass
