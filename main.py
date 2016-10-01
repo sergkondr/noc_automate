@@ -14,11 +14,9 @@ def get_hosts(source):
             hosts.append(s)
         return hosts
     except FileNotFoundError:
-        print("No such file: %s" % source)
-        return None
-    except:
-        print("Error: %s" % NameError)
-        return None
+        exit("No such file: %s" % source)
+    except Exception:
+        exit("[-] Error: %s" % NameError)
 
 
 def worker(host):
@@ -27,8 +25,8 @@ def worker(host):
         result = current_instance.get_result()
         print(host[0] + " - ok")
         return result
-    except NameError:
-        return ['\n' + host[0], NameError]
+    except Exception:
+        return ['\n' + host[0], 'error']
 
 
 def main_thread(source_file, result_file):
@@ -44,7 +42,7 @@ def main_thread(source_file, result_file):
         for node in results:
             for parameter in node:
                 print(parameter, end=';', file=result)
-    print('finished')
+    exit('finished')
 
 
 def main():
@@ -56,8 +54,7 @@ def main():
     if i == 1:
         command = GetSerialNumbers
     else:
-        print('err')
-        return -1
+        exit('[-] wrong choice')
     login = input('username: ').encode('utf-8') + '\r'.encode('utf-8')
     password = getpass('password: ').encode('utf-8') + '\r'.encode('utf-8')
     source_file = r'to_check.csv'
