@@ -14,7 +14,7 @@ def get_hosts(source):
             hosts.append(s)
         return hosts
     except FileNotFoundError:
-        exit("No such file: %s" % source)
+        exit("[-] No such file: %s" % source)
     except Exception:
         exit("[-] Error: %s" % NameError)
 
