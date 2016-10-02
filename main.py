@@ -49,7 +49,7 @@ def main():
     global login, password, command
     i = int(input("""Menu:
     1. Get serial numbers from juniper
-    2. -
+    2. -                                    # Todo: compare configuration on NodeB/eNodeB and router
     >>> """))
     if i == 1:
         command = GetSerialNumbers
