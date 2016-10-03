@@ -1,5 +1,64 @@
+from multiprocessing.dummy import Pool as ThreadPool
 from telnetlib import Telnet
 from time import sleep
+
+
+class MultithreadWorking():
+    def __init__(self, command, login, password, source_file, result_file):
+        self.command = command
+        self.login = login
+        self.password = password
+
+        self.hosts = self._get_jobs()
+        self.number_of_jobs = self._get_number_of_jobs()
+        self.number_of_threads = self._get_number_of_threads()
+        
+        self.source_file = source_file
+        self.result_file = result_file
+        
+    def _get_jobs(self):
+        try:
+            hosts_file = open(self.source_file).readlines()
+            hosts = []
+            for s in hosts_file:
+                s = s.split()
+                hosts.append(s)
+            self.hosts = hosts
+        except FileNotFoundError:
+            exit("[-] No such file: %s" % source)
+        except Exception:
+            exit("[-] Something wrong")
+    
+    def _get_number_of_jobs(self):
+        return len(self.hosts)
+    
+    def _get_number_of_threads(self):
+        if len(self.number_of_jobs) > 63:
+            return 63
+        else:
+            return len(self.number_of_jobs)
+        
+    def _worker(self, host):
+        try:
+            current_instance = self.command(host[1], host[0], self.login, self.password)
+            result = current_instance.get_result()
+            print(host[0] + " - ok")
+            return result
+        except Exception:
+            return ['\n' + host[0], 'error']
+            
+    def start(self):
+        with open(self.result_file, 'a') as result:
+            pool = ThreadPool(self.number_of_threads)
+            results = pool.map(self._worker, self.hosts)
+            pool.close()
+            pool.join()
+            result.write('')
+            for node in results:
+                for parameter in node:
+                    print(parameter, end=';', file=result)
+        print('finished')
+
 
 
 class TelnetPrototype():
