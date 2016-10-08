@@ -60,7 +60,6 @@ class MultithreadWorking():
         print('finished')
 
 
-
 class TelnetPrototype():
     def __init__(self, host_IP, host_name, login, password, device_type='juniper'):
         self.host_IP = host_IP
@@ -128,11 +127,11 @@ class GetSerialNumbers(TelnetPrototype):
     def __init__(self, host_IP, host_name, login, password):
         TelnetPrototype.__init__(self, host_IP, host_name, login, password, 'juniper')
         self.command = b'show chassis hardware\n'
-        self.header = 'site_id;serial number'
+        self.header = 'site_id;serial number\n'
 
     def _get_result_of_command(self):
         self.telnet_instance.write(self.command)
         sleep(self.command_sleep)
         result = str(self.telnet_instance.read_very_eager().decode('utf-8').split()[13])
         self.telnet_instance.close()
-        return ['\n' + self.host_name, result]
+        return [self.host_name, result + '\n']
