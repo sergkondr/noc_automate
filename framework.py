@@ -9,12 +9,12 @@ class MultithreadWorking():
         self.login = login
         self.password = password
 
-        self.hosts = self._get_jobs()
-        self.number_of_jobs = self._get_number_of_jobs()
-        self.number_of_threads = self._get_number_of_threads()
-        
         self.source_file = source_file
         self.result_file = result_file
+
+        self._get_jobs()
+        self._get_number_of_jobs()
+        self._get_number_of_threads()
         
     def _get_jobs(self):
         try:
@@ -25,18 +25,18 @@ class MultithreadWorking():
                 hosts.append(s)
             self.hosts = hosts
         except FileNotFoundError:
-            exit("[-] No such file: %s" % source)
+            exit("[-] No such file: \n%s" % self.source_file)
         except Exception:
-            exit("[-] Something wrong")
+            exit("[-] Something was wrong")
     
     def _get_number_of_jobs(self):
-        return len(self.hosts)
+        self.number_of_jobs = len(self.hosts)
     
     def _get_number_of_threads(self):
         if len(self.number_of_jobs) > 63:
-            return 63
+            self.number_of_threads = 63
         else:
-            return len(self.number_of_jobs)
+            self.number_of_threads = len(self.number_of_jobs)
         
     def _worker(self, host):
         try:
