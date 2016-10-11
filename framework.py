@@ -33,19 +33,20 @@ class MultithreadWorking():
         self.number_of_jobs = len(self.hosts)
     
     def _get_number_of_threads(self):
-        if len(self.number_of_jobs) > 63:
+        if self.number_of_jobs > 63:
             self.number_of_threads = 63
         else:
-            self.number_of_threads = len(self.number_of_jobs)
+            self.number_of_threads = self.number_of_jobs
         
     def _worker(self, host):
         try:
             current_instance = self.command(host[1], host[0], self.login, self.password)
+            self.header = current_instance.header
             result = current_instance.get_result()
             print(host[0] + " - ok")
-            return result
         except Exception:
-            return ['\n' + host[0], 'error']
+            result = ['\n' + host[0], 'error']
+        return result
             
     def start(self):
         with open(self.result_file, 'a') as result:
@@ -53,7 +54,7 @@ class MultithreadWorking():
             results = pool.map(self._worker, self.hosts)
             pool.close()
             pool.join()
-            result.write('')
+            result.write(self.header)
             for node in results:
                 for parameter in node:
                     print(parameter, end=';', file=result)
@@ -70,49 +71,43 @@ class TelnetPrototype():
         self.connection_timeout = 7
         self.command_sleep = 0.5
         self.header = ';'
-        self.telnet_instance = self._connect()
-
-    def _connect_to_juniper(self):
-        try:
-            telnet_instance = Telnet(self.host_IP, timeout=self.connection_timeout)
-            sleep(self.command_sleep)
-            telnet_instance.read_until(b'login: ')
-            telnet_instance.write(self.login)
-            telnet_instance.read_until(b'Password:')
-            telnet_instance.write(self.password)
-            telnet_instance.read_until(b'> ')
-            return telnet_instance
-        except:
-            print('%s (%s)\t- not available' % (self.host_IP, self.host_name))
-            print(NameError)
-            raise NameError('connection error')
-
-    def _connect_to_tellabs(self):
-        try:
-            telnet_instance = Telnet(self.host_IP, timeout=self.connection_timeout)
-            sleep(self.command_sleep + 1)
-            if telnet_instance.read_very_eager()[-1] != ord('>'):
-                telnet_instance.write(self.login)
-                telnet_instance.read_until(b'password:')
-                telnet_instance.write(self.password)
-                telnet_instance.read_until(b'>')
-            else:
-                telnet_instance.write(b' \r')
-            return telnet_instance
-        except:
-            print('%s (%s)\t- not available' % (self.host_IP, self.host_name))
-            raise NameError('connection error')
+        self._connect()
 
     def _connect(self):
-        if self.device_type == 'juniper':
-            return self._connect_to_juniper()
-        elif self.device_type == 'tellabs':
-            return self._connect_to_tellabs()
-        else:
-            return None
+        try:
+            self._get_telnet_connection()
+            if self.device_type == 'juniper':
+                self._auth_to_juniper()
+            elif self.device_type == 'tellabs':
+                self._auth_to_tellabs()
+            print('%s - connected' %self.host_IP)
+        except:
+            print('%s (%s)\t- authorization failed' % (self.host_IP, self.host_name))
 
-    def _get_result_of_command(self):
-        pass
+    def _get_telnet_connection(self):
+        try:
+            self.telnet_instance = Telnet(self.host_IP, timeout=self.connection_timeout)
+        except:
+            print('%s (%s)\t- not available' % (self.host_IP, self.host_name))
+            self.telnet_instance = None
+    
+    def _auth_to_juniper(self):
+        sleep(self.command_sleep)
+        self.telnet_instance.read_until(b'ogin: ')
+        self.telnet_instance.write(self.login)
+        self.telnet_instance.read_until(b'assword:')
+        self.telnet_instance.write(self.password)
+        self.telnet_instance.read_until(b'> ')
+
+    def _auth_to_tellabs(self):
+       sleep(self.command_sleep + 1)
+       if self.telnet_instance.read_very_eager()[-1] != ord('>'):
+           self.telnet_instance.write(self.login)
+           self.telnet_instance.read_until(b'assword:')
+           self.telnet_instance.write(self.password)
+           self.telnet_instance.read_until(b'>')
+       else:
+           self.telnet_instance.write(b' \r')
 
     def get_result(self):
         try:
@@ -122,16 +117,19 @@ class TelnetPrototype():
             print('%s (%s)\t- command error' % (self.host_IP, self.host_name))
             raise NameError('command error')
 
+    def _get_result_of_command(self):
+        pass
+
 
 class GetSerialNumbers(TelnetPrototype):
     def __init__(self, host_IP, host_name, login, password):
         TelnetPrototype.__init__(self, host_IP, host_name, login, password, 'juniper')
         self.command = b'show chassis hardware\n'
-        self.header = 'site_id;serial number\n'
+        self.header = 'site_id;serial number'
 
     def _get_result_of_command(self):
         self.telnet_instance.write(self.command)
         sleep(self.command_sleep)
         result = str(self.telnet_instance.read_very_eager().decode('utf-8').split()[13])
         self.telnet_instance.close()
-        return [self.host_name, result + '\n']
+        return ['\n' + self.host_name, result]
