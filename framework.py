@@ -133,3 +133,19 @@ class GetSerialNumbers(TelnetPrototype):
         result = str(self.telnet_instance.read_very_eager().decode('utf-8').split()[13])
         self.telnet_instance.close()
         return ['\n' + self.host_name, result]
+
+
+class GetSoftwareVersion(TelnetPrototype):
+    def __init__(self, host_IP, host_name, login, password):
+        TelnetPrototype.__init__(self, host_IP, host_name, login, password, 'juniper')
+        self.command = b'show version\n'
+        self.header = 'site_id;model;version;'
+
+    def _get_result_of_command(self):
+        self.telnet_instance.write(self.command)
+        sleep(self.command_sleep)
+        result = str(self.telnet_instance.read_very_eager().decode('utf-8'))
+        model = result[result.find('Model: ') + 7: result.find('\n', result.find('Model: '))].rstrip()
+        junos_version = result[result.find('[') + 1: result.find(']')]
+        self.telnet_instance.close()
+        return ['\n' + self.host_IP, model, junos_version]
