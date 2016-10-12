@@ -1,4 +1,5 @@
 noc automate
 ===============
 Some scripts to automate some work (and learn python):
-* get serial numbers from Junper routers
+* Get serial numbers from Junper routers
+* Get software version from Juniper routers
