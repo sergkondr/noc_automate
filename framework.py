@@ -59,67 +59,6 @@ class MultithreadWorking():
                 for parameter in node:
                     print(parameter, end=';', file=result)
         print('finished')
-from multiprocessing.dummy import Pool as ThreadPool
-from telnetlib import Telnet
-from time import sleep
-
-
-class MultithreadWorking():
-    def __init__(self, command, login, password, source_file, result_file):
-        self.command = command
-        self.login = login
-        self.password = password
-
-        self.source_file = source_file
-        self.result_file = result_file
-
-        self._get_jobs()
-        self._get_number_of_jobs()
-        self._get_number_of_threads()
-        
-    def _get_jobs(self):
-        try:
-            hosts_file = open(self.source_file).readlines()
-            hosts = []
-            for s in hosts_file:
-                s = s.split()
-                hosts.append(s)
-            self.hosts = hosts
-        except FileNotFoundError:
-            exit("[-] No such file: \n%s" % self.source_file)
-        except Exception:
-            exit("[-] Something was wrong")
-    
-    def _get_number_of_jobs(self):
-        self.number_of_jobs = len(self.hosts)
-    
-    def _get_number_of_threads(self):
-        if self.number_of_jobs > 63:
-            self.number_of_threads = 63
-        else:
-            self.number_of_threads = self.number_of_jobs
-        
-    def _worker(self, host):
-        try:
-            current_instance = self.command(host[1], host[0], self.login, self.password)
-            self.header = current_instance.header
-            result = current_instance.get_result()
-            print(host[0] + " - ok")
-        except Exception:
-            result = ['\n' + host[0], 'error']
-        return result
-            
-    def start(self):
-        with open(self.result_file, 'a') as result:
-            pool = ThreadPool(self.number_of_threads)
-            results = pool.map(self._worker, self.hosts)
-            pool.close()
-            pool.join()
-            result.write(self.header)
-            for node in results:
-                for parameter in node:
-                    print(parameter, end=';', file=result)
-        print('finished')
 
 
 class TelnetPrototype():
